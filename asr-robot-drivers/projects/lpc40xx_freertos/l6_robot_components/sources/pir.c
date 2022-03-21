@@ -22,6 +22,8 @@ QueueHandle_t light_pir_queue;
 static void pir__init_pin(void);
 static bool pir__get_sensor(void);
 
+static void pir__debug_print(char *line);
+
 /**************************************************************************************/
 /********************************* Public Functions ***********************************/
 /**************************************************************************************/
@@ -37,9 +39,6 @@ void pir__freertos_task(void *parameter) {
 
   while (1) {
     TickType_t temp_count = tick_count;
-#if DEBUG_ENABLE
-    printf("Tick count: %lu\n", tick_count);
-#endif
 
     if (pir__get_sensor()) {
       xQueueSend(light_pir_queue, &movement_signal, 0);
@@ -62,3 +61,9 @@ static void pir__init_pin(void) {
 }
 
 static bool pir__get_sensor(void) { return gpio__get(pir_pin); }
+
+static void pir__debug_print(char *line) {
+#if DEBUG_ENABLE
+  printf("%s\n", &line[0]);
+#endif
+}
