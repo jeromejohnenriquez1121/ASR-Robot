@@ -22,7 +22,10 @@ QueueHandle_t light_pir_queue;
 static void pir__init_pin(void);
 static bool pir__get_sensor(void);
 
-static void pir__debug_print(char *line);
+// Debug Purposes:
+#if DEBUG_ENABLE
+static void lightbulb__debug_print(char *line);
+#endif
 
 /**************************************************************************************/
 /********************************* Public Functions ***********************************/
@@ -62,8 +65,9 @@ static void pir__init_pin(void) {
 
 static bool pir__get_sensor(void) { return gpio__get(pir_pin); }
 
-static void pir__debug_print(char *line) {
 #if DEBUG_ENABLE
+
+static void pir__debug_print(char *line) {
   printf("%s\n", &line[0]);
-#endif
 }
+#endif

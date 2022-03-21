@@ -19,7 +19,10 @@ static void lightbulb__init_pin(void);
 static void lightbulb__turn_on_light(void);
 static void lightbulb__turn_off_light(void);
 
+// Debug Purposes:
+#if DEBUG_ENABLE
 static void lightbulb__debug_print(char *line);
+#endif
 
 typedef enum signal_type { is_movement = 0, no_movement = 1 } signal_type_e;
 
@@ -63,8 +66,6 @@ static void lightbulb__init_pin(void) {
 static void lightbulb__turn_on_light(void) { gpio__set(lightbulb_pin); }
 static void lightbulb__turn_off_light(void) { gpio__reset(lightbulb_pin); }
 
-static void lightbulb__debug_print(char *line) {
 #if DEBUG_ENABLE
-  printf("%s\n", &line[0]);
+static void lightbulb__debug_print(char *line) { printf("%s\n", &line[0]); }
 #endif
-}
