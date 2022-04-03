@@ -43,7 +43,6 @@ void pir__freertos_task(void *parameter) {
   lightbulb__init();
 
   TickType_t tick_count = 0;
-  char light_duration[5] = "";
   char *get_duration = "";
 
   pir__init_pin();

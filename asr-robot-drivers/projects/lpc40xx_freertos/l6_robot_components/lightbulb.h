@@ -12,4 +12,4 @@ void lightbulb__turn_on_light(void);
 
 void lightbulb__turn_off_light(void);
 
-void lightbulb__init();
+void lightbulb__init(void);

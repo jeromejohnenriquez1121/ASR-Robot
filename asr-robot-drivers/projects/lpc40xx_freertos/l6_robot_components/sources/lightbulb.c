@@ -22,7 +22,7 @@ void lightbulb__turn_on_light(void) { gpio__set(lightbulb_pin); }
 
 void lightbulb__turn_off_light(void) { gpio__reset(lightbulb_pin); }
 
-void lightbulb__init_pin(void) {
+void lightbulb__init(void) {
   const uint32_t iocon_mode__clear_resistor = ~(3 << 3);
   const uint32_t iocon_mode__enable_pull_down_resistor = (1 << 3);
 
