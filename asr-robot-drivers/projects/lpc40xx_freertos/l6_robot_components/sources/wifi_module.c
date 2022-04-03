@@ -7,37 +7,37 @@
 #include "uart.h"
 #include <stdio.h>
 
-static const uart_e esp32_uart = UART__3;
-
-// Define connection variables here:
+// Define wireless connection variables here:
 static const char *wifi_ssid = "wifi_name";
 static const char *wifi_password = "wifi_password";
 static const char *wifi_ip_addr = "0.0.0.0";
 static const uint16_t wifi_tcp_port = 0;
 
-static void wifi_module__init(void);
+// Private variables:
+static const uart_e esp32_uart = UART__3;
 
-extern QueueHandle_t light_duration_queue;
+// Global variables:
+QueueHandle_t data_queue;
+
+// Private function declarations:
+static void wifi_module__init(void);
 
 /**************************************************************************************/
 /********************************* Public Functions ***********************************/
 /**************************************************************************************/
 
 void wifi_module__freertos_task(void *parameter) {
-
   // Wait for CLI output
-  vTaskDelay(100);
+  vTaskDelay(500);
 
   wifi_module__init();
 
   char light_duration[5] = "";
 
-  light_duration_queue = xQueueCreate(1, sizeof(light_duration));
-
   while (1) {
     esp32__tcp_connect(&wifi_ip_addr[0], wifi_tcp_port);
 
-    xQueueReceive(light_duration_queue, &light_duration[0], portMAX_DELAY);
+    xQueueReceive(data_queue, &light_duration[0], portMAX_DELAY);
     esp32__cipsend(&light_duration[0], sizeof(&light_duration[0]));
   }
 }

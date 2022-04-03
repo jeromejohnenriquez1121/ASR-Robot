@@ -1,4 +1,6 @@
 #include "pir.h"
+#include "lightbulb.h"
+#include "time_duration.h"
 
 #include "FreeRTOS.h"
 #include "gpio.h"
@@ -13,12 +15,15 @@
 #define PORT_NUM 1
 #define PIN_NUM 0
 
-#define DEBUG_ENABLE 1
+#define DEBUG_ENABLE 0
 
+// Global variables:
+QueueHandle_t data_queue;
+
+// Private variables:
 static gpio_s pir_pin;
 
-QueueHandle_t light_pir_queue;
-
+// Private function declarations:
 static void pir__init_pin(void);
 static bool pir__get_sensor(void);
 
@@ -32,9 +37,14 @@ static void lightbulb__debug_print(char *line);
 /**************************************************************************************/
 
 void pir__freertos_task(void *parameter) {
-  int movement_signal = 0;
-  int no_movement_signal = 1;
+  // Wait for CLI output
+  vTaskDelay(500);
+
+  lightbulb__init();
+
   TickType_t tick_count = 0;
+  char light_duration[5] = "";
+  char *get_duration = "";
 
   pir__init_pin();
 
@@ -43,14 +53,25 @@ void pir__freertos_task(void *parameter) {
   while (1) {
     TickType_t temp_count = tick_count;
 
-    if (pir__get_sensor()) {
-      xQueueSend(light_pir_queue, &movement_signal, 0);
-      tick_count += xTaskGetTickCount() - temp_count;
+    // If there is no movement
+    while (!pir__get_sensor()) {
+      lightbulb__turn_on_light();
+      tick_count = xTaskGetTickCount() - temp_count;
 
-    } else if (!pir__get_sensor()) {
-      xQueueSend(light_pir_queue, &no_movement_signal, 0);
-      tick_count = 0;
+      vTaskDelay(500);
     }
+
+    if (tick_count != 0) {
+      xQueueSend(data_queue, &get_duration[0], 0);
+    }
+
+    // If there is movement:
+    lightbulb__turn_off_light();
+
+    // Reset variables
+    *get_duration = "";
+    tick_count = 0;
+    vTaskDelay(500);
   }
 }
 
@@ -65,9 +86,4 @@ static void pir__init_pin(void) {
 
 static bool pir__get_sensor(void) { return gpio__get(pir_pin); }
 
-#if DEBUG_ENABLE
-
-static void pir__debug_print(char *line) {
-  printf("%s\n", &line[0]);
-}
-#endif
+static void pir__debug_print(char *line) { printf("%s\n", &line[0]); }
