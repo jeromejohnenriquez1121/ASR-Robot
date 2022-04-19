@@ -15,7 +15,8 @@
 #define PORT_NUM 1
 #define PIN_NUM 0
 
-#define DEBUG_ENABLE 0
+// Enable debugging:
+#define DEBUG_ENABLE 1
 
 // Global variables:
 QueueHandle_t data_queue;
@@ -37,9 +38,7 @@ static void lightbulb__debug_print(char *line);
 /**************************************************************************************/
 
 void pir__freertos_task(void *parameter) {
-  // Wait for CLI output
-  vTaskDelay(500);
-
+  vTaskDelay(5000);
   lightbulb__init();
 
   TickType_t tick_count = 0;
@@ -62,10 +61,16 @@ void pir__freertos_task(void *parameter) {
 
     if (tick_count != 0) {
       xQueueSend(data_queue, &get_duration[0], 0);
+#if DEBUG_ENABLE
+      fprintf(stderr, "Sent %s\n", &get_duration[0]);
+#endif
     }
 
     // If there is movement:
     lightbulb__turn_off_light();
+#if DEBUG_ENABLE
+    fprintf(stderr, "Light turned off");
+#endif
 
     // Reset variables
     *get_duration = "";

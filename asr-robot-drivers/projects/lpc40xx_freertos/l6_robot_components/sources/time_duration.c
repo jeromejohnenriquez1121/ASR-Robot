@@ -51,7 +51,7 @@ static char *time_duration_lookup_table[240] = {
 };
 
 char *time_duration(TickType_t ticks) {
-  int minute = (ticks / 1000) / 60;
+  int minute = (ticks / 1000);
 
   return time_duration_lookup_table[minute];
 }
