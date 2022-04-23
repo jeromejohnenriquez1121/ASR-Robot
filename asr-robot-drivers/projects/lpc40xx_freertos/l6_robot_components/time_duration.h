@@ -4,4 +4,4 @@
 #include "task.h"
 #include <stdint.h>
 
-char *time_duration(TickType_t ticks);
+char *get_time_duration(TickType_t ticks);
