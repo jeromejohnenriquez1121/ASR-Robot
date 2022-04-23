@@ -10,16 +10,17 @@
 #include "sj2_cli.h"
 
 #include "pir.h"
-#include "wifi_module.h"
+#include "write_time_on_data.h"
 
-#include "uart3_init.h"
-#include "esp8266_module.h"
-
-// Variables:
-QueueHandle_t data_queue;
+// Public Queue Variables:
+QueueHandle_t time_on_data_queue;
+QueueHandle_t time_off_data_queue;
 
 // Private function declarations:
-static void init_queues(void) { data_queue = xQueueCreate(1, sizeof(char[5])); }
+static void init_queues(void) {
+  time_on_data_queue = xQueueCreate(1, sizeof(char[5]));
+  time_off_data_queue = xQueueCreate(1, sizeof(char[5]));
+}
 
 /************************************************************************************************************/
 /********************************************* Main Function ************************************************/
@@ -29,7 +30,7 @@ int main(void) {
   sj2_cli__init();
 
   xTaskCreate(pir__freertos_task, "PIR task", 4096 / sizeof(void *), NULL, PRIORITY_LOW, NULL);
-  xTaskCreate(esp8266_module__freertos_task, "ESP32 task", 4096 / sizeof(void *), NULL, PRIORITY_HIGH, NULL);
+  xTaskCreate(write_time_on_data__freertos_task, "Writes to SD card", 4096 / sizeof(void *), NULL, PRIORITY_HIGH, NULL);
 
   vTaskStartScheduler();
 
