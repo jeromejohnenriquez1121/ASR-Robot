@@ -57,7 +57,9 @@ static const char *time_duration_lookup_table[480] = {
 };
 
 char *get_time_duration(TickType_t ticks) {
-  int minute = (ticks / 1000) * (1 / 60);
+  int seconds = (int)(ticks / 1000); // For testing purposes. It will count minutes which will correspond to HH:MM
+  
+  // int minute = (int)(ticks / (60 * 1000));
 
-  return time_duration_lookup_table[minute];
+  return time_duration_lookup_table[seconds];
 }
