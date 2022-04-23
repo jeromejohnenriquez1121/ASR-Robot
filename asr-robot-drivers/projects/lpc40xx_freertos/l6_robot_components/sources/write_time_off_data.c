@@ -23,6 +23,8 @@ void write_time_off_data__freertos_task(void *parameter) {
       f_write(&file, &line[0], strlen(line), &bytes_written);
     }
 
+    memset(&line[0], 0, strlen(line));
+
     f_close(&file);
   }
 }
