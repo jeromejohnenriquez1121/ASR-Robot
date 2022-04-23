@@ -8,6 +8,7 @@
 #include "task.h"
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 
 // If somehow port and pin number
 // needs to change throughout project,
@@ -19,8 +20,8 @@
 #define DEBUG_ENABLE 1
 
 // Global variables:
-QueueHandle_t data_queue;
-
+QueueHandle_t time_on_data_queue;
+QueueHandle_t time_off_data_queue;
 // Private variables:
 static gpio_s pir_pin;
 
@@ -42,40 +43,38 @@ void pir__freertos_task(void *parameter) {
   lightbulb__init();
 
   TickType_t tick_count = 0;
-  char *get_duration = "";
+  char get_duration[5] = "";
+  char *time_on = "";
+  char *time_off = "";
 
   pir__init_pin();
 
   printf("Started PIR FreeRTOS task.\n");
 
   while (1) {
-    TickType_t temp_count = tick_count;
-
     // If there is no movement
     while (!pir__get_sensor()) {
-      lightbulb__turn_on_light();
-      tick_count = xTaskGetTickCount() - temp_count;
-
+      TickType_t temp_count = tick_count;
+      tick_count += xTaskGetTickCount() - temp_count;
       vTaskDelay(500);
     }
 
-    if (tick_count != 0) {
-      xQueueSend(data_queue, &get_duration[0], 0);
-#if DEBUG_ENABLE
-      fprintf(stderr, "Sent %s\n", &get_duration[0]);
-#endif
+    // Get the time from lookup table and reset string
+    *time_on = get_time_duration(tick_count)[0];
+    xQueueSend(time_on_data_queue, &time_on[0], 0);
+    memset(&time_on[0], 0, sizeof(time_on));
+
+    // If there is movmement
+    while (pir__get_sensor()) {
+      TickType_t temp_count = tick_count;
+      tick_count += xTaskGetTickCount() - temp_count;
+      vTaskDelay(500);
     }
 
-    // If there is movement:
-    lightbulb__turn_off_light();
-#if DEBUG_ENABLE
-    fprintf(stderr, "Light turned off");
-#endif
-
-    // Reset variables
-    *get_duration = "";
-    tick_count = 0;
-    vTaskDelay(500);
+    // Get the time from lookup table and reset string
+    *time_off = get_time_duration(tick_count)[0];
+    xQueueSend(time_off_data_queue, &time_off[0], 0);
+    memset(&time_off[0], 0, sizeof(time_off));
   }
 }
 
