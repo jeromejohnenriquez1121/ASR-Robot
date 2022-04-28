@@ -17,7 +17,7 @@
 #define PIN_NUM 0
 
 // Enable debugging:
-#define DEBUG_ENABLE 1
+#define DEBUG_ENABLE 10
 
 // Global variables:
 QueueHandle_t time_on_data_queue;
@@ -29,11 +29,6 @@ static gpio_s pir_pin;
 static void pir__init_pin(void);
 static bool pir__get_sensor(void);
 
-// Debug Purposes:
-#if DEBUG_ENABLE
-static void lightbulb__debug_print(char *line);
-#endif
-
 /**************************************************************************************/
 /********************************* Public Functions ***********************************/
 /**************************************************************************************/
@@ -42,42 +37,43 @@ void pir__freertos_task(void *parameter) {
   vTaskDelay(5000);
   lightbulb__init();
 
-  TickType_t tick_count = 0;
-  char get_duration[5] = "";
-  char *time_on = "";
-  char *time_off = "";
-
+  char time_on[12] = "";
+  char time_off[12] = "";
   pir__init_pin();
 
   printf("Started PIR FreeRTOS task.\n");
 
+  TickType_t ticks = 0;
+
   while (1) {
-    // If there is no movement
+    // If there is NO movement, turn on light
+    ticks = xTaskGetTickCount();
     while (!pir__get_sensor()) {
-      TickType_t temp_count = tick_count;
-      tick_count += xTaskGetTickCount() - temp_count;
-      vTaskDelay(500);
+      TickType_t temp = xTaskGetTickCount() - ticks;
+      printf("LIGHT ON: %lu\n", temp);
+      if (pir__get_sensor()) {
+        strcpy(&time_on[0], &get_time_duration(temp)[0]);
+        xQueueSend(time_on_data_queue, &time_on[0], 0);
+        printf("Send to on queue\n");
+        vTaskDelay(500);
+      }
+      vTaskDelay(100);
     }
 
-    // Get the time from lookup table and reset string
-    *time_on = get_time_duration(tick_count)[0];
-    xQueueSend(time_on_data_queue, &time_on[0], 0);
-    memset(&time_on[0], 0, sizeof(time_on));
-
-    // If there is movmement
+    // If there is movement, turn off light
+    ticks = xTaskGetTickCount();
     while (pir__get_sensor()) {
-      TickType_t temp_count = tick_count;
-      tick_count += xTaskGetTickCount() - temp_count;
-      vTaskDelay(500);
+      TickType_t temp = xTaskGetTickCount() - ticks;
+      if (!pir__get_sensor()) {
+        strcpy(&time_off[0], &get_time_duration(temp)[0]);
+        xQueueSend(time_off_data_queue, &time_off[0], 0);
+        printf("Send to off queue\n");
+        vTaskDelay(500);
+      }
     }
-
-    // Get the time from lookup table and reset string
-    *time_off = get_time_duration(tick_count)[0];
-    xQueueSend(time_off_data_queue, &time_off[0], 0);
-    memset(&time_off[0], 0, sizeof(time_off));
+    vTaskDelay(100);
   }
 }
-
 /**************************************************************************************/
 /********************************* Private Functions **********************************/
 /**************************************************************************************/
@@ -88,5 +84,3 @@ static void pir__init_pin(void) {
 }
 
 static bool pir__get_sensor(void) { return gpio__get(pir_pin); }
-
-static void pir__debug_print(char *line) { printf("%s\n", &line[0]); }
