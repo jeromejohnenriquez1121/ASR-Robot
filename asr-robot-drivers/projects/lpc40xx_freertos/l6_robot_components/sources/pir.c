@@ -3,6 +3,7 @@
 #include "time_duration.h"
 
 #include "FreeRTOS.h"
+#include "delay.h"
 #include "gpio.h"
 #include "queue.h"
 #include "task.h"
@@ -20,8 +21,7 @@
 #define DEBUG_ENABLE 10
 
 // Global variables:
-QueueHandle_t time_on_data_queue;
-QueueHandle_t time_off_data_queue;
+QueueHandle_t data_queue;
 // Private variables:
 static gpio_s pir_pin;
 
@@ -37,8 +37,6 @@ void pir__freertos_task(void *parameter) {
   vTaskDelay(5000);
   lightbulb__init();
 
-  char time_on[12] = "";
-  char time_off[12] = "";
   pir__init_pin();
 
   printf("Started PIR FreeRTOS task.\n");
@@ -49,29 +47,34 @@ void pir__freertos_task(void *parameter) {
     // If there is NO movement, turn on light
     ticks = xTaskGetTickCount();
     while (!pir__get_sensor()) {
+      printf("Light on\n");
+      lightbulb__turn_on_light();
+
       TickType_t temp = xTaskGetTickCount() - ticks;
-      printf("LIGHT ON: %lu\n", temp);
       if (pir__get_sensor()) {
-        strcpy(&time_on[0], &get_time_duration(temp)[0]);
-        xQueueSend(time_on_data_queue, &time_on[0], 0);
-        printf("Send to on queue\n");
-        vTaskDelay(500);
+        char line[12] = "ON ";
+        strcat(&line[0], &get_time_duration(temp)[0]);
+        xQueueSend(data_queue, &line[0], 0);
       }
-      vTaskDelay(100);
+
+      delay__ms(15 * 1000);
     }
 
     // If there is movement, turn off light
     ticks = xTaskGetTickCount();
     while (pir__get_sensor()) {
+      printf("Light off\n");
+      lightbulb__turn_off_light();
+
       TickType_t temp = xTaskGetTickCount() - ticks;
       if (!pir__get_sensor()) {
-        strcpy(&time_off[0], &get_time_duration(temp)[0]);
-        xQueueSend(time_off_data_queue, &time_off[0], 0);
-        printf("Send to off queue\n");
-        vTaskDelay(500);
+        char line[12] = "OFF ";
+        strcat(&line[0], &get_time_duration(temp)[0]);
+        xQueueSend(data_queue, &line[0], 0);
       }
+
+      delay__ms(15 * 1000);
     }
-    vTaskDelay(100);
   }
 }
 /**************************************************************************************/
