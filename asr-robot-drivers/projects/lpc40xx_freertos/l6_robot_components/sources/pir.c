@@ -41,42 +41,40 @@ void pir__freertos_task(void *parameter) {
 
   printf("Started PIR FreeRTOS task.\n");
 
-  TickType_t ticks = 0;
-
   while (1) {
     // If there is NO movement, turn on light
-    ticks = xTaskGetTickCount();
-    while (!pir__get_sensor()) {
+    if (!pir__get_sensor()) {
       printf("Light on\n");
       lightbulb__turn_on_light();
+      TickType_t first_time_on = xTaskGetTickCount();
 
-      TickType_t temp = xTaskGetTickCount() - ticks;
-      if (pir__get_sensor()) {
-        char line[12] = "ON ";
-        strcat(&line[0], &get_time_duration(temp)[0]);
-        xQueueSend(data_queue, &line[0], 0);
+      while (!pir__get_sensor()) {
+        delay__ms(5 * 1000);
       }
 
-      delay__ms(15 * 1000);
+      TickType_t total_time_on = xTaskGetTickCount() - first_time_on;
+      char line[12] = "ON";
+      strcat(&line[0], &get_time_duration(total_time_on)[0]);
+      xQueueSend(data_queue, &line[0], 0);
     }
 
     // If there is movement, turn off light
-    ticks = xTaskGetTickCount();
-    while (pir__get_sensor()) {
-      printf("Light off\n");
+    if (pir__get_sensor()) {
       lightbulb__turn_off_light();
+      TickType_t first_time_off = xTaskGetTickCount();
 
-      TickType_t temp = xTaskGetTickCount() - ticks;
-      if (!pir__get_sensor()) {
-        char line[12] = "OFF ";
-        strcat(&line[0], &get_time_duration(temp)[0]);
-        xQueueSend(data_queue, &line[0], 0);
+      while (pir__get_sensor()) {
+        delay__ms(5 * 1000);
       }
 
-      delay__ms(15 * 1000);
+      TickType_t total_time_on = xTaskGetTickCount() - first_time_off;
+      char line[12] = "OFF";
+      strcat(&line[0], &get_time_duration(total_time_on)[0]);
+      xQueueSend(data_queue, &line[0], 0);
     }
   }
 }
+
 /**************************************************************************************/
 /********************************* Private Functions **********************************/
 /**************************************************************************************/
