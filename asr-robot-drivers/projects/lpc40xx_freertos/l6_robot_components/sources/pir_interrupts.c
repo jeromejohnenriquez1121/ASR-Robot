@@ -8,8 +8,11 @@
 #include "task.h"
 
 // Define Relay Module GPIO pins
-const uint32_t PORT_NUM = 2;
-const uint32_t PIN_NUM = 7;
+const uint32_t P_PORT_NUM = 2;
+const uint32_t P_PIN_NUM = 7;
+
+const uint32_t R_PORT_NUM = 1;
+const uint32_t R_PIN_NUM = 0;
 
 // Define time constants
 const TickType_t init_pir_sensor_time = 10 * 1000;
@@ -24,12 +27,12 @@ static TickType_t time_duration_on = 0;
 
 // This is the interrupt function
 static void pir_interrupts__turn_off_light(void) {
-  const uint32_t relay_module_pin = (1 << PIN_NUM);
+  const uint32_t relay_module_pin = (1 << R_PIN_NUM);
 
   // Interrupts only happen in port numbers 0 and 2
-  if (PORT_NUM == 0) {
+  if (R_PORT_NUM == 0) {
     LPC_GPIOINT->IO0IntClr |= (1 << relay_module_pin);
-  } else if (PORT_NUM == 2) {
+  } else if (R_PORT_NUM == 2) {
     LPC_GPIOINT->IO2IntClr |= (1 << relay_module_pin);
   }
 
@@ -43,16 +46,16 @@ static void pir_interrupts__turn_off_light(void) {
 }
 
 static void set_up_relay_module(void) {
-  relay_module = gpio__construct_with_function(PORT_NUM, PIN_NUM, GPIO__FUNCITON_0_IO_PIN);
+  relay_module = gpio__construct_with_function(R_PORT_NUM, R_PIN_NUM, GPIO__FUNCITON_0_IO_PIN);
   gpio__set_as_output(relay_module);
 }
 
 static void set_up_interrupts(void) {
-  const uint32_t relay_module_pin = (1 << PIN_NUM);
+  const uint32_t relay_module_pin = (1 << R_PIN_NUM);
 
-  if (PORT_NUM == 0) {
+  if (P_PORT_NUM == 0) {
     LPC_GPIOINT->IO0IntEnF |= (1 << relay_module_pin);
-  } else if (PORT_NUM == 2) {
+  } else if (P_PORT_NUM == 2) {
     LPC_GPIOINT->IO2IntEnF |= (1 << relay_module_pin);
   }
 
