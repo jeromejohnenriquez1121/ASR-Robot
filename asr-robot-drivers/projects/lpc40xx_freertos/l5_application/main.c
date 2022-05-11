@@ -14,6 +14,7 @@
 #include "delay.h"
 #include "new_pir.h"
 #include "pir.h"
+#include "pir_interrupts.h"
 #include "string.h"
 #include "write_time_off_data.h"
 #include "write_time_on_data.h"
@@ -98,7 +99,7 @@ int main(void) {
   fprintf(stderr, "Initialized queues\n");
 
   // xTaskCreate(pir__freertos_task, "PIR task", 4096 / sizeof(void *), NULL, PRIORITY_LOW, NULL);
-  xTaskCreate(pir_write__freertos_task, "Writes to SD card", 4096 / sizeof(void *), NULL, PRIORITY_HIGH, NULL);
+  xTaskCreate(pir_interrupts__freertos_task, "Writes to SD card", 4096 / sizeof(void *), NULL, PRIORITY_HIGH, NULL);
   // xTaskCreate(record_data, "Test write", 4096 / sizeof(void *), NULL, PRIORITY_HIGH, NULL);
   // xTaskCreate(test_light, "Test light", 2048 / sizeof(void *), NULL, PRIORITY_HIGH, NULL);
 
