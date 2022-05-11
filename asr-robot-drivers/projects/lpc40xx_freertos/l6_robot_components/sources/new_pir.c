@@ -96,3 +96,13 @@ static void write_file(char *line) {
   f_close(&file);
 }
 
+/*
+  turn on light
+  while(1){
+    if count is 20:
+      turn on light;
+
+    count++;
+  }
+
+*/
