@@ -12,8 +12,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#define PORT_NUM 1
-#define PIN_NUM 0
+#define PORT_NUM 2
+#define PIN_NUM 7
 
 // Private function and variable initializations:
 static gpio_s pir_pin;
@@ -35,42 +35,21 @@ void pir_write__freertos_task(void *parameter) {
 
   fprintf(stderr, "Start PIR freertos task\n");
 
+  bool movement;
+
+  lightbulb__turn_on_light();
+  vTaskDelay(5 * 1000);
+
   while (1) {
     // If there is NO movement, turn on light:
-    if (!pir__get_sensor()) {
-      lightbulb__turn_on_light();
-      vTaskDelay(500);
-
-      fprintf(stderr, "Light on\n");
-
-      TickType_t first_time_on = xTaskGetTickCount();
-
-      while (!pir__get_sensor()) {
-        ;
-      }
-
-      TickType_t total_time_on = xTaskGetTickCount() - first_time_on;
-      char line[12] = "ON";
-      strcat(&line[0], &get_time_duration(total_time_on)[0]);
-      write_file(&line[0]);
-    }
-
-    // If there IS movement, turn off light:
-    if (pir__get_sensor()) {
+    movement = pir__get_sensor();
+    if (movement) {
       lightbulb__turn_off_light();
       vTaskDelay(10 * 1000);
 
-      fprintf(stderr, "Light off\n");
-      TickType_t first_time_off = xTaskGetTickCount();
-
-      while (pir__get_sensor()) {
-        vTaskDelay(10 * 1000);
-      }
-
-      TickType_t total_time_off = xTaskGetTickCount() - first_time_off;
-      char line[12] = "OFF";
-      strcat(&line[0], &get_time_duration(total_time_off)[0]);
-      write_file(&line[0]);
+    } else {
+      lightbulb__turn_on_light();
+      movement = false;
     }
   }
 }
@@ -95,4 +74,3 @@ static void write_file(char *line) {
 
   f_close(&file);
 }
-

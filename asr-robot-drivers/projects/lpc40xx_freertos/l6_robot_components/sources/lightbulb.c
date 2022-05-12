@@ -9,7 +9,7 @@
 
 // Define port and pin numbers here:
 #define PORT_NUM 1
-#define PIN_NUM 1
+#define PIN_NUM 0
 #define VCC_PIN 14
 
 // Private variables:
