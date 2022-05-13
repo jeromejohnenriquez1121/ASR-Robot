@@ -25,6 +25,10 @@ static FIL file;
 static UINT br;
 static char file_name[12] = "asr.txt";
 
+TickType_t time_on_ticks;
+TickType_t time_off_ticks;
+
+
 /**************************************************************************************/
 /********************************* Public Functions ***********************************/
 /**************************************************************************************/
@@ -35,22 +39,28 @@ void pir_write__freertos_task(void *parameter) {
 
   fprintf(stderr, "Start PIR freertos task\n");
 
-  bool movement;
-
   lightbulb__turn_on_light();
   vTaskDelay(5 * 1000);
 
-  while (1) {
-    // If there is NO movement, turn on light:
-    movement = pir__get_sensor();
-    if (movement) {
-      lightbulb__turn_off_light();
-      vTaskDelay(10 * 1000);
+  time_off_ticks = 0;
+  time_on_ticks = 0;
 
-    } else {
-      lightbulb__turn_on_light();
-      movement = false;
+  while (1) {
+    // If there is movement, turn on light
+    if (pir__get_sensor()) {
+      lightbulb__turn_off_light();
+      vTaskDelay(60 * 1000);
     }
+    if (pir__get_sensor()) {
+      vTaskDelay(60 * 1000);
+    }
+    if (pir__get_sensor()) {
+
+      vTaskDelay(60 * 1000);
+    }
+
+    // If there is no movement, turn off light
+    lightbulb__turn_on_light();
   }
 }
 
