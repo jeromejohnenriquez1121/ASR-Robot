@@ -25,9 +25,8 @@ static FIL file;
 static UINT br;
 static char file_name[12] = "asr.txt";
 
-TickType_t time_on_ticks;
-TickType_t time_off_ticks;
-
+static TickType_t time_on_ticks;
+static TickType_t time_off_ticks;
 
 /**************************************************************************************/
 /********************************* Public Functions ***********************************/
@@ -42,25 +41,38 @@ void pir_write__freertos_task(void *parameter) {
   lightbulb__turn_on_light();
   vTaskDelay(5 * 1000);
 
-  time_off_ticks = 0;
+  time_off_ticks = 60 * 1000;
   time_on_ticks = 0;
+
+  TickType_t temp = 0;
 
   while (1) {
     // If there is movement, turn on light
     if (pir__get_sensor()) {
+      char line[12] = "ON";
+      strcat(&line[0], &get_time_duration(xTaskGetTickCount())[0]);
+      write_file(&line[0]);
+
       lightbulb__turn_off_light();
       vTaskDelay(60 * 1000);
+      char line[12] = "OFF";
+      strcat(&line[0], &get_time_duration(60 * 10000)[0]);
+      write_file(&line[0]);
     }
     if (pir__get_sensor()) {
       vTaskDelay(60 * 1000);
+      strcat(&line[0], &get_time_duration(60 * 10000)[0]);
+      write_file(&line[0])
     }
     if (pir__get_sensor()) {
-
       vTaskDelay(60 * 1000);
+      strcat(&line[0], &get_time_duration(60 * 10000)[0]);
+      write_file(&line[0]);
     }
 
     // If there is no movement, turn off light
     lightbulb__turn_on_light();
+    vTaskDelay(3 * 1000);
   }
 }
 
