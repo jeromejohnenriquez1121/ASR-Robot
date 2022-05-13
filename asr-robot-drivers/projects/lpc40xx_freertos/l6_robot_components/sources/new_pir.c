@@ -44,27 +44,28 @@ void pir_write__freertos_task(void *parameter) {
   time_off_ticks = 60 * 1000;
   time_on_ticks = 0;
 
-  TickType_t temp = 0;
-
   while (1) {
     // If there is movement, turn on light
     if (pir__get_sensor()) {
-      char line[12] = "ON";
-      strcat(&line[0], &get_time_duration(xTaskGetTickCount())[0]);
-      write_file(&line[0]);
+      char lineON[12] = "ON";
+      strcat(&lineON[0], &get_time_duration(xTaskGetTickCount())[0]);
+      write_file(&lineON[0]);
 
+      char lineOFF[12] = "ON";
       lightbulb__turn_off_light();
       vTaskDelay(60 * 1000);
+
+      strcat(&lineOFF[0], &get_time_duration(60 * 10000)[0]);
+      write_file(&lineOFF[0]);
+    }
+    if (pir__get_sensor()) {
       char line[12] = "OFF";
+      vTaskDelay(60 * 1000);
       strcat(&line[0], &get_time_duration(60 * 10000)[0]);
       write_file(&line[0]);
     }
     if (pir__get_sensor()) {
-      vTaskDelay(60 * 1000);
-      strcat(&line[0], &get_time_duration(60 * 10000)[0]);
-      write_file(&line[0])
-    }
-    if (pir__get_sensor()) {
+      char line[12] = "OFF";
       vTaskDelay(60 * 1000);
       strcat(&line[0], &get_time_duration(60 * 10000)[0]);
       write_file(&line[0]);
